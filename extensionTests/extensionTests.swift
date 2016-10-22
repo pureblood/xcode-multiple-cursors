@@ -19,28 +19,32 @@ class extensionTests: XCTestCase {
     
     func testSingleLineMatch() {
         let letRange = buffer.positionRanges(of: "let").first!
-        XCTAssert(letRange.lowerBound.line == 1)
-        XCTAssert(letRange.lowerBound.column == 3)
-        XCTAssert(letRange.upperBound.line == 1)
-        XCTAssert(letRange.upperBound.column == 6)
+        XCTAssert(letRange.start.line == 1)
+        XCTAssert(letRange.start.column == 3)
+        XCTAssert(letRange.end.line == 1)
+        XCTAssert(letRange.end.column == 5)
     }
     
     func testMultiLineMatch() {
         let intRange = buffer.positionRanges(of: "Int\n}").first!
-        XCTAssert(intRange.lowerBound.line == 1)
-        XCTAssert(intRange.lowerBound.column == 10)
-        XCTAssert(intRange.upperBound.line == 2)
-        XCTAssert(intRange.upperBound.column == 1)
+        XCTAssert(intRange.start.line == 1)
+        XCTAssert(intRange.start.column == 10)
+        XCTAssert(intRange.end.line == 2)
+        XCTAssert(intRange.end.column == 0)
     }
     
     func testSingleLineSelection() {
-        let textPositionRange = TextPosition(line: 1, column: 3) ..< TextPosition(line: 1, column: 6)
+        let textPositionRange = TextRange(
+            start: TextPosition(line: 1, column: 3),
+            end: TextPosition(line: 1, column: 5))
         let bufferRange = buffer.range(for: textPositionRange)!
         XCTAssert(String(buffer[bufferRange]) == "let")
     }
     
     func testMultiLineSelection() {
-        let textPositionRange = TextPosition(line: 1, column: 10) ..< TextPosition(line: 2, column: 1)
+        let textPositionRange = TextRange(
+            start: TextPosition(line: 1, column: 10),
+            end: TextPosition(line: 2, column: 0))
         let bufferRange = buffer.range(for: textPositionRange)!
         XCTAssert(String(buffer[bufferRange]) == "Int\n}")
     }

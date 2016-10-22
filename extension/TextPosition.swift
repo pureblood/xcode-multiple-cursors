@@ -5,6 +5,11 @@ struct TextPosition {
     var column: UInt
 }
 
+struct TextRange {
+    var start: TextPosition
+    var end: TextPosition
+}
+
 extension TextPosition: Comparable {
     public static func <(lhs: TextPosition, rhs: TextPosition) -> Bool {
         return lhs.line < rhs.line && lhs.column < rhs.column
@@ -17,14 +22,14 @@ extension TextPosition: Comparable {
 
 extension String {
     // maybe replace this with enumerateSubstrings?
-    func allRanges(of string: String) -> [Range<String.Index>] {
+    func ranges(of string: String) -> [Range<String.Index>] {
         var ranges = [Range<String.Index>]()
         var searchRange: Range<String.Index>? = nil
         while true {
             guard let range = range(of: string, range: searchRange) else {
                 break
             }
-            ranges.append(range)
+            ranges.append(range.lowerBound ..< range.upperBound)
             searchRange = range.upperBound ..< endIndex
         }
         return ranges
@@ -58,18 +63,18 @@ extension String {
         })?.position
     }
     
-    func positionRange(of range: Range<String.Index>) -> Range<TextPosition>? {
-        guard let lowerBound = position(of: range.lowerBound) else {
+    func positionRange(of range: Range<String.Index>) -> TextRange? {
+        guard let start = position(of: range.lowerBound) else {
             return nil
         }
-        guard let upperBound = position(of: range.upperBound) else {
+        guard let end = position(of: index(before: range.upperBound)) else {
             return nil
         }
-        return lowerBound ..< upperBound
+        return TextRange(start: start, end: end)
     }
     
-    func positionRanges(of string: String) -> [Range<TextPosition>] {
-        return allRanges(of: string).map { positionRange(of: $0)! }
+    func positionRanges(of string: String) -> [TextRange] {
+        return ranges(of: string).map { positionRange(of: $0)! }
     }
     
     func index(for position: TextPosition) -> String.Index? {
@@ -77,14 +82,14 @@ extension String {
             _position == position
         })?.index
     }
-    
-    func range(for positionRange: Range<TextPosition>) -> Range<String.Index>? {
-        guard let lowerBound = index(for: positionRange.lowerBound) else {
+
+    func range(for textRange: TextRange) -> Range<String.Index>? {
+        guard let lowerBound = index(for: textRange.start) else {
             return nil
         }
-        guard let upperBound = index(for: positionRange.upperBound) else {
+        guard let upperBound = index(for: textRange.end) else {
             return nil
         }
-        return lowerBound ..< upperBound
+        return lowerBound ..< index(after: upperBound)
     }
 }
